@@ -1,5 +1,6 @@
 import numpy as np
 from chainer import optimizers
+from tqdm import tqdm
 
 from iterator import Iterator
 from model import NLMBase
@@ -45,33 +46,18 @@ def train(args):
 
     for e in range(epoch):
         iterator = Iterator(batch_size, texts_int, labels_int, window_size)
-        for i in iterator:
+        loss_acc = 0
+        for i in tqdm(iterator):
             label = model.prepare_input([i[0]], dtype=np.int32)
             center = model.prepare_input([i[1]], dtype=np.int32)
             context = model.prepare_input(i[2], dtype=np.int32)
 
             model.cleargrads()
             loss = model(label, context, center)
+            loss_acc += float(loss.data)
             loss.backward()
             optimizer.update()
-            print(loss.data)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        print(loss_acc / len(labels_int) / batch_size)
 
 if __name__ == '__main__':
     args = get_args()
